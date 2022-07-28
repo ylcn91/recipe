@@ -7,6 +7,8 @@ import recipes.model.Recipe;
 import recipes.service.RecipeService;
 
 import javax.validation.Valid;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class RecipeController {
@@ -31,7 +33,7 @@ public class RecipeController {
     public ResponseEntity<?> addRecipe(@RequestBody @Valid Recipe recipe) {
         //dictionary.put(key.incrementAndGet(),recipe);
         recipeService.save(recipe);
-        return new ResponseEntity<>("{ \"id\" : " + recipe.getId() + " }",HttpStatus.OK);
+        return new ResponseEntity<>(Map.of("id",recipe.getId()) ,HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/recipe/{recipeId}")
@@ -41,8 +43,28 @@ public class RecipeController {
 
     @DeleteMapping(value ="/api/recipe/{recipeId}" )
     public ResponseEntity<?> deleteRecipe(@PathVariable int recipeId){
-        recipeService.deleteById(recipeId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+        return recipeService.deleteById(recipeId);
     }
+
+
+    @PutMapping(value = "/api/recipe/{recipeId}")
+    public ResponseEntity<?> updateRecipe(@PathVariable int recipeId, @Valid @RequestBody Recipe recipe) {
+        return recipeService.findRecipeToUpdate(recipeId,recipe);
+    }
+
+    @GetMapping(path = "api/recipe/search")
+    public ResponseEntity<List<Recipe>> searchRecipe(@RequestParam(required = false) String category,
+                                                     @RequestParam(required = false) String name) {
+        //will refactor this line ****
+        if ((category != null && name != null) || (category == null && name == null))
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(category != null ?
+                recipeService.getAllByCategory(category) :
+                recipeService.getAllByName(name), HttpStatus.OK);
+    }
+
+
 
 }
